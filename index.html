@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Enseigne Cm-Cisea – Simulation d'éclairage</title>
+<style>
+:root{--ink:#16233f;--teal:#0f8f9a;--bg:#eef3f8}
+*{box-sizing:border-box;margin:0}
+body{font-family:"Segoe UI",system-ui,Arial,sans-serif;background:var(--bg);color:var(--ink);min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:8px 14px}
+#wrap{width:min(100%,max(760px,calc((100dvh - 205px)*1434/704)),1500px);display:flex;flex-direction:column;gap:8px}
+header{width:100%;display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-size:clamp(16px,2vw,21px);font-weight:700}
+header p{font-size:13px;opacity:.75}
+#scene{position:relative;width:100%;aspect-ratio:1434/704;overflow:hidden;border-radius:14px;container-type:inline-size;box-shadow:0 10px 30px rgba(10,30,60,.25);background:#000}
+#scene>*{position:absolute}
+#photo{inset:0;width:100%;height:100%;display:block}
+#stars{inset:0 0 70% 0;opacity:0}
+.star{position:absolute;width:.16cqw;height:.16cqw;min-width:2px;min-height:2px;background:#fff;border-radius:50%}
+#desat{inset:0;background:#808080;mix-blend-mode:saturation;opacity:0}
+#night{inset:0;mix-blend-mode:multiply}
+#tint{inset:0}
+#moon{width:4cqw;height:4cqw;border-radius:50%;left:84%;top:5%;background:radial-gradient(circle at 38% 38%,#fff 0,#e9eefb 55%,#c6d0ea 100%);box-shadow:0 0 4cqw 1.6cqw rgba(190,210,255,.35);opacity:0}
+/* enseigne : du portail (x=22) à la fin de la clôture (x=1467) sur la photo 1493 px */
+#signwrap{left:1.87%;width:96.23%;top:18.2%;aspect-ratio:2724/349}
+#signwrap img,#signwrap .mask,#signwrap #dim,#signwrap #sshadow{position:absolute;inset:0;width:100%;height:100%}
+#halo{opacity:0;transform:scale(1.02)}
+#halo2{opacity:0;transform:scale(1.008)}
+#signbox{position:absolute;inset:0}
+.mask{-webkit-mask-size:100% 100%;mask-size:100% 100%}
+#emis,#emis2,#emisT,#emisT2,#reliefN{opacity:0}
+#emis2{mix-blend-mode:hard-light}
+#emisT2{mix-blend-mode:screen}
+#dim{background:#000;border-radius:1.25% / 9.8%;opacity:0}
+#sshadow{border-radius:1.25% / 9.8%}
+#gloss{border-radius:1.25% / 9.8%;mix-blend-mode:soft-light;opacity:.45;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.9) 46%,transparent 62%)}
+#bloom,#bloomA{mix-blend-mode:screen;opacity:0;background-size:100% 100%}
+/* éclairage porté sur le mur sous l'enseigne */
+#wash{left:1.9%;width:96.2%;top:43.5%;height:9%;opacity:0;mix-blend-mode:screen;-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);
+ background:linear-gradient(180deg,rgba(215,235,255,.85),rgba(160,200,255,.28) 55%,transparent)}
+#washL{left:1.9%;width:16.5%;top:43.5%;height:8%;-webkit-mask-image:linear-gradient(90deg,#000 60%,transparent);mask-image:linear-gradient(90deg,#000 60%,transparent);opacity:0;mix-blend-mode:screen;background:linear-gradient(180deg,rgba(255,60,60,.5),transparent)}
+#road{left:0;right:0;top:74%;bottom:0;opacity:0;mix-blend-mode:screen;
+ background:radial-gradient(ellipse 50% 45% at 50% 38%,rgba(170,205,255,.30),transparent 100%)}
+.led{height:1%;border-radius:1cqw;background:#fff;opacity:0;box-shadow:0 0 1.2cqw .5cqw rgba(255,244,214,.9),0 0 4cqw 1.4cqw rgba(255,230,170,.45);top:48.6%}
+#hud{right:1.6cqw;top:1.4cqw;background:rgba(10,20,40,.55);color:#fff;font-size:1.5cqw;padding:.5cqw 1.2cqw;border-radius:99px;backdrop-filter:blur(6px);font-variant-numeric:tabular-nums;z-index:5}
+#panel{width:100%;background:#fff;border-radius:12px;padding:10px 14px;box-shadow:0 4px 16px rgba(10,30,60,.1);display:grid;gap:8px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{font:inherit;font-size:14px;border:1px solid #c9d5e3;background:#f6f9fc;color:var(--ink);padding:7px 12px;border-radius:9px;cursor:pointer;transition:.15s}
+button:hover{background:#e8f1fa}
+small{opacity:.7;font-size:12px}
+button.on small{opacity:.85}
+button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+input[type=range]{flex:1;min-width:160px;accent-color:var(--teal);height:24px}
+#time{font-weight:700;font-size:18px;min-width:56px;font-variant-numeric:tabular-nums}
+.tag{font-weight:700;font-size:14px;color:var(--ink)}
+.sw{display:flex;align-items:center;gap:8px;font-size:14px;margin-left:auto;cursor:pointer;user-select:none}
+.sw input{width:20px;height:20px;accent-color:var(--teal)}
+.note{font-size:12px;opacity:.65;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:600px){button{padding:8px 10px;font-size:14px}.note{white-space:normal;overflow:visible}}
+</style>
+</head>
+<body>
+<div id="wrap">
+<header>
+ <h1>Enseigne Cm-Cisea — Simulation d'éclairage</h1>
+ <p id="desc">Votre enseigne sur le bâtiment, de jour comme de nuit</p>
+</header>
+
+<div id="scene">
+ <img id="photo" alt="Bâtiment" src="img/batiment.jpg">
+ <div id="desat"></div>
+ <div id="night"></div>
+ <div id="stars"></div>
+ <div id="tint"></div>
+ <div id="moon"></div>
+ <div id="road"></div>
+ <div id="signwrap">
+  <img id="halo" alt="">
+  <img id="halo2" alt="">
+  <div id="signbox">
+   <div id="sshadow"></div>
+   <img id="sign" alt="Enseigne Cm-Cisea" src="">
+   <img id="reliefD" alt="" src="">
+   <div id="dim"></div>
+   <img id="emis" alt="" src="">
+   <img id="reliefN" alt="" src="">
+   <img id="emisT" alt="" src="">
+   <img id="emis2" alt="" src="">
+   <img id="emisT2" alt="" src="">
+   <div id="bloomA"></div>
+   <div id="bloom"></div>
+   <div id="gloss"></div>
+  </div>
+ </div>
+ <div id="wash"></div><div id="washL"></div>
+ <div class="led" style="left:25.3%;width:6.1%"></div>
+ <div class="led" style="left:55.8%;width:6%"></div>
+ <div class="led" style="left:71.7%;width:6.1%"></div>
+ <div id="hud">12:00</div>
+</div>
+
+<div id="panel">
+ <div class="row" id="props">
+  <span class="tag">Enseigne retenue</span>
+  <label class="sw"><input id="power" type="checkbox" checked> Éclairage de l'enseigne allumé</label>
+ </div>
+ <div class="row">
+  <span id="time">12:00</span>
+  <input id="hour" type="range" min="0" max="24" step="0.05" value="12" aria-label="Heure de la journée">
+  <button data-h="12">☀️ Plein jour</button>
+  <button data-h="18.3">🌇 Coucher du soleil</button>
+  <button data-h="21.5">🌙 Nuit</button>
+  <button id="play">▶ Lancer la journée</button>
+ </div>
+ <p class="note">Simulation indicative : le rendu réel dépend des matériaux et de l'éclairage LED choisis.</p>
+</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const SIGNS=[{s:'img/s.webp',a:'img/a.webp',t:'img/t.webp',rd:'img/rd.webp',rn:'img/rn.webp'}];
+const DESC=['Enseigne retenue — Centre Médical de Radiologie · Cm-Cisea'];
+const GEOM=[[1.87,96.23,18.21]];
+let P=0;
+function setProp(i){P=i;const S=SIGNS[i],g=GEOM[i];
+ const w=$('signwrap');w.style.left=g[0]+'%';w.style.width=g[1]+'%';w.style.top=g[2]+'%';
+ $('sign').src=S.s;['emis','emis2','halo'].forEach(id=>$(id).src=S.a);['emisT','emisT2','halo2'].forEach(id=>$(id).src=S.t);$('reliefD').src=S.rd;$('reliefN').src=S.rn;$('desc').textContent=DESC[i];
+ const gl=$('gloss');$('bloom').style.backgroundImage='url('+S.t+')';$('bloomA').style.backgroundImage='url('+S.a+')';
+ document.querySelectorAll('button[data-p]').forEach(x=>x.classList.toggle('on',+x.dataset.p===i));}
+const st=$('stars');let seed=11;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;for(let i=0;i<70;i++){const s=document.createElement('div');s.className='star';s.style.left=rnd()*100+'%';s.style.top=rnd()*100+'%';s.style.opacity=.35+rnd()*.65;st.appendChild(s);}
+// clés horaires : heure, luminosité ambiante, teinte (assombrissement multiplicatif), voile coloré
+const K=[
+ [0,  .10,[40,50,104],  [10,20,70,.0]],
+ [5,  .12,[42,52,108],  [10,20,70,.0]],
+ [6.5,.55,[205,175,170],[255,150,90,.20]],
+ [8,  .92,[250,246,240],[255,240,220,.03]],
+ [12, 1,  [255,255,255],[255,255,255,0]],
+ [16.5,.93,[255,248,235],[255,235,200,.06]],
+ [18.3,.55,[225,170,150],[255,140,70,.26]],
+ [20, .20,[48,52,110], [20,25,80,.0]],
+ [24, .10,[40,50,104],  [10,20,70,.0]]
+];
+const lerp=(a,b,t)=>a+(b-a)*t;
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const ss=x=>x*x*(3-2*x);
+const mixv=(a,b,t)=>a.map((v,i)=>lerp(v,b[i],t));
+function key(h){let i=0;while(i<K.length-2&&h>K[i+1][0])i++;const a=K[i],b=K[i+1],t=clamp((h-a[0])/(b[0]-a[0]));
+ return{L:lerp(a[1],b[1],t),mul:mixv(a[2],b[2],t),tint:mixv(a[3],b[3],t)};}
+let H=12,power=true;
+function render(){
+ const k=key(H),L=k.L;
+ $('night').style.background=`rgb(${k.mul.map(Math.round)})`;
+ $('tint').style.background=`rgba(${k.tint.slice(0,3).map(Math.round)},${k.tint[3]})`;
+ const night=ss(clamp((.5-L)/.38));
+ $('moon').style.opacity=night;$('stars').style.opacity=night*.55;
+ $('desat').style.opacity=.45*(1-L);
+ const g=power?ss(clamp((.80-L)/.55)):0;
+const unlit=.2+.8*L;
+ $('dim').style.opacity=1-unlit;
+ $('sshadow').style.boxShadow=`0 .45cqw .7cqw rgba(0,0,0,${.4*L*(1-g)})`;
+ $('emis').style.opacity=g;$('emis2').style.opacity=.85*g;
+ $('emisT').style.opacity=g;$('emisT2').style.opacity=.5*g;
+ $('reliefN').style.opacity=g;
+ $('bloom').style.opacity=.4*g;$('bloom').style.filter=`blur(.2cqw) brightness(2)`;
+ $('bloomA').style.opacity=.35*g;$('bloomA').style.filter=`blur(.3cqw) brightness(1.5) saturate(2)`;
+ $('halo2').style.opacity=.6*g;$('halo2').style.filter=`blur(.7cqw) brightness(2.6)`;
+ $('halo').style.opacity=.95*g;$('halo').style.filter=`blur(1.5cqw) saturate(2.2) brightness(1.8)`;
+ $('gloss').style.opacity=.45*L*(1-g*.7);
+ $('wash').style.opacity=.2*g;$('washL').style.opacity=0;$('road').style.opacity=.45*g;
+ document.querySelectorAll('.led').forEach(e=>e.style.opacity=night*.95);
+ const hh=Math.floor(H)%24,mm=Math.floor((H%1)*60);
+ const t=String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+ $('time').textContent=$('hud').textContent=t;$('hour').value=H;
+ document.querySelectorAll('button[data-h]').forEach(x=>x.classList.toggle('on',Math.abs(+x.dataset.h-H)<.06));
+}
+let raf=null,playing=false;
+function stop(){playing=false;cancelAnimationFrame(raf);raf=null;$('play').textContent='▶ Lancer la journée';$('play').classList.remove('on');}
+function anim(to){const from=H,t0=performance.now(),d=1300;const f=n=>{const t=clamp((n-t0)/d);H=lerp(from,to,ss(t));render();if(t<1)raf=requestAnimationFrame(f);};cancelAnimationFrame(raf);raf=requestAnimationFrame(f);}
+$('hour').oninput=e=>{stop();H=+e.target.value;render();};
+document.querySelectorAll('button[data-h]').forEach(x=>x.onclick=()=>{stop();anim(+x.dataset.h)});
+$('power').onchange=e=>{power=e.target.checked;render();};
+$('play').onclick=()=>{if(playing){stop();return;}playing=true;$('play').textContent='⏸ Pause';$('play').classList.add('on');let last=performance.now();
+ const f=n=>{if(!playing)return;H=(H+(n-last)/1000*1.2)%24;last=n;render();raf=requestAnimationFrame(f);};cancelAnimationFrame(raf);raf=requestAnimationFrame(f);};
+window.addEventListener('load',()=>{setTimeout(()=>{SIGNS.forEach(S=>['s','a','t','rd','rn'].forEach(k=>{const i=new Image();i.src=S[k];}));},400);});
+document.querySelectorAll('button[data-p]').forEach(x=>x.onclick=()=>setProp(+x.dataset.p));
+const q=new URLSearchParams(location.search);
+setProp(0);
+if(q.has('h')){const v=parseFloat(q.get('h'));if(isFinite(v))H=clamp(v,0,24);}
+if(q.get('on')==='0'){power=false;$('power').checked=false;}
+if(q.has('bare')){$('wrap').style.width='100vw';$('panel').style.display='none';document.querySelector('header').style.display='none';document.body.style.padding='0';$('scene').style.borderRadius='0';$('scene').style.maxWidth='none';$('hud').style.display='none';}
+render();
+</script>
+</body>
+</html>
